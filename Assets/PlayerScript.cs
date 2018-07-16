@@ -6,11 +6,14 @@ public class PlayerScript : MonoBehaviour {
 
 	bool allowMovement;
 	GameObject ball;
+	float shotPower;
+	bool isCurrentTurn;
 
 	// Use this for initialization
 	void Start () {
 		this.allowMovement = false;
 		ball = GameObject.Find ("Ball");
+		shotPower = 0f;
 	}
 	
 	// Update is called once per frame
@@ -18,8 +21,12 @@ public class PlayerScript : MonoBehaviour {
 		this.GetComponent<Rigidbody> ().angularVelocity = Vector3.zero;
 		if (this.allowMovement == true) {
 			MovePlayer ();
-			if (Input.GetKeyDown (KeyCode.Space)) {
-				Shoot ();
+			if (Input.GetKeyUp(KeyCode.Space)) {
+				Shoot (shotPower);
+				shotPower = 0;
+			}
+			if (Input.GetKey (KeyCode.Space)) {
+				PowerUp (); 
 			}
 		}
 
@@ -27,41 +34,52 @@ public class PlayerScript : MonoBehaviour {
 	}
 
 	public void SetFocus(bool focus) {
-		this.GetComponentInChildren<Camera> ().enabled = focus;
+		//this.GetComponentInChildren<Camera> ().enabled = focus;
 		this.allowMovement = focus;
+		this.isCurrentTurn = focus;
 
 		if (focus == false) {
 			this.GetComponent<Rigidbody> ().constraints = RigidbodyConstraints.FreezeAll;
+			gameObject.GetComponent<Light> ().enabled = false;
 		}
 		else if (focus == true) {
-			this.GetComponent<Rigidbody> ().constraints = RigidbodyConstraints.None;
+			this.GetComponent<Rigidbody> ().constraints = RigidbodyConstraints.FreezeRotation;
+			gameObject.GetComponent<Light> ().enabled = true;
 		}
+
+
 
 	}
 
 	void MovePlayer() {
 		//this.transform.Translate (new Vector3 (3*Input.GetAxis ("Horizontal")*Time.deltaTime, 0, 0));
-		this.GetComponent<Rigidbody>().AddRelativeForce(new Vector3(3*Input.GetAxis("Horizontal")*Time.deltaTime, 0, 0), ForceMode.Impulse);
+		this.GetComponent<Rigidbody>().AddForce(new Vector3(-3*Input.GetAxis("Vertical")*Time.deltaTime, 0, 
+			-3*Input.GetAxis("Horizontal")*Time.deltaTime), ForceMode.Impulse);
 	}
 
-	void Shoot() {
-		/*RaycastHit hit;
-		Debug.DrawRay(new Vector3(transform.position.x,0.2f,transform.position.z), transform.TransformDirection(Vector3.forward)*5, Color.blue, duration:10f);
-		if (Physics.Raycast (new Vector3(transform.position.x,0.2f,transform.position.z), transform.TransformDirection (Vector3.forward), out hit, 5)) {
-			Debug.Log ("raycast!");
-			Debug.Log (hit.collider);
-			if(hit.collider == ball.GetComponent<Collider>()) {
-				Debug.Log("Hit the ball");
-				ball.GetComponent<BallScript> ().MoveBall (transform.position);
-			}
-		}*/
+	void Shoot(float power) {		
+		if (!isCurrentTurn) {
+			return;
+		}
 
 		if ((ball.transform.position - this.transform.position).magnitude <= 5) {
 			Debug.Log ("Ball is close enough");
 			ball.GetComponent<Rigidbody>().AddForce (new Vector3 ((ball.transform.position.x - this.transform.position.x), 0,
-				(ball.transform.position.z - this.transform.position.z)).normalized*700);
+				(ball.transform.position.z - this.transform.position.z)).normalized*shotPower*50);
 		}
+		isCurrentTurn = false;
 	}
 
+	void PowerUp () {
+		if (shotPower >= 40) {
+			Shoot (40);
+			shotPower = 0;
+		}
 
+		else {
+			shotPower++;
+			Debug.Log (shotPower);
+		}
+			
+	}
 }
