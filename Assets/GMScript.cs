@@ -43,13 +43,9 @@ public class GMScript : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (ball.transform.position != lastBallPosition) {
-			Debug.Log ("ball moving");
-		}
-		else {
-			lastBallPosition = ball.transform.position;
-		}
+		CheckIfGoal ();
 		RegisterInput ();
+
 	}
 
 	void RegisterInput() {
@@ -67,6 +63,7 @@ public class GMScript : MonoBehaviour {
 				bluePlayers [i].GetComponent<PlayerScript> ().SetFocus (false);
 			}
 			yield return new WaitForSeconds(1);
+			ball.GetComponent<Rigidbody> ().constraints = RigidbodyConstraints.None;
 			turn = 1;
 			GameObject player = FindNearestPlayer();
 			player.GetComponent<PlayerScript> ().SetFocus (true);
@@ -78,6 +75,7 @@ public class GMScript : MonoBehaviour {
 				redPlayers [i].GetComponent<PlayerScript> ().SetFocus (false);
 			}
 			yield return new WaitForSeconds (1);
+			ball.GetComponent<Rigidbody> ().constraints = RigidbodyConstraints.None;
 			turn = 0;
 			FindNearestPlayer ().GetComponent<PlayerScript> ().SetFocus (true);
 		}
@@ -117,6 +115,27 @@ public class GMScript : MonoBehaviour {
 
 		return redPlayers [0];
 		
+	}
+
+	void CheckIfGoal() {
+		if (ball.transform.position.z >= 14) {
+			Debug.Log ("Red Scores!");
+			ball.transform.position = new Vector3 (0, 0.5f, 12);
+			ball.GetComponent<Rigidbody> ().constraints = RigidbodyConstraints.FreezeAll;
+
+			//this changes the turn to blue's
+			turn = 0;
+			ChangeTurn ();
+		}
+
+		if (ball.transform.position.z <= -14) {
+			Debug.Log ("Blue Scores!");
+			ball.transform.position = new Vector3 (0, 0.5f, -12);
+			ball.GetComponent<Rigidbody> ().constraints = RigidbodyConstraints.FreezeAll;
+			//this changes the turn to red's
+			turn = 1;
+			ChangeTurn ();
+		}
 	}
 
 
